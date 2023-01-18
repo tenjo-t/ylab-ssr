@@ -3,34 +3,63 @@ from pathlib import Path
 
 import tomllib
 
-import ssr
+import ssr.util
 
 
-class ConfigError(ssr.SSRError):
+class ConfigError(ssr.util.SSRError):
     pass
 
 
-class Config:
+class Config(t.NamedTuple):
+    """SSRの基本設定
+
+    Attributes
+    ----------
+    datadir: Path
+        データファイルを保存するフォルダへのパス
+    tmpdir: Path
+        一時ファイルを保存するフォルダへのパス
+    macropath: Path
+        マクロファイルへのパス
+    macro: dict[str, t.Any]
+        マクロが自由に設定できる設定
+
+    Examples
+    -------
+    ```toml
+    DATADIR = "path/to/datadir"
+    TMPDIR  = "path/to/tmpdir"
+    MACROPATH = "path/to/macropath"
+
+    # マクロが自由に設定できる設定
+    [MACRO]
+    filename = "foo.csv"
+    ```
+
+    """
+
+    datadir: Path
+    tmpdir: Path
+    macropath: Path
     macro: dict[str, t.Any]
 
-    def __init__(self, path: Path) -> None:
-        with path.open(encoding="utf-8") as f:
+    @staticmethod
+    def from_toml(path: Path):
+        with path.open("rb") as f:
             config = tomllib.load(f)
 
-        datadir = config["DATADIR"]
-        if datadir is None:
+        if not "DATADIR" in config:
             raise ConfigError("DATADIRは必須です")
-        self.datadir = Path(datadir)
+        datadir = Path(config["DATADIR"])
 
-        tmpdir = config["TMPDIR"]
-        if tmpdir is None:
+        if not "TMPDIR" in config:
             raise ConfigError("TEMPDIRは必須です")
-        self.tmpdir = Path(tmpdir)
+        tmpdir = Path(config["TMPDIR"])
 
-        macrodir = config["MACRODIR"]
-        if macrodir is None:
+        if not "MACROPATH" in config:
             raise ConfigError("MACRODIRは必須です")
-        self.macrodir = Path(macrodir)
+        macropath = Path(config["MACROPATH"])
 
-        if (macro := config["MACRO"]) is not None:
-            self.macro = macro
+        macro = config["MACRO"] if "MACRO" in config else {}
+
+        return Config(datadir, tmpdir, macropath, macro)
