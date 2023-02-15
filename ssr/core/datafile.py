@@ -7,11 +7,11 @@ import ssr.util
 
 class DataFile:
     def __init__(self, file: TextIOWrapper, delimiter: str) -> None:
+        self.delimiter = delimiter
         self._file = file
-        self._delimiter = delimiter
 
     def write(self, *data: tuple) -> None:
-        text = self._delimiter.join(map(str, ssr.util.flatten(data))) + "\n"
+        text = self.delimiter.join(map(str, ssr.util.flatten(data))) + "\n"
         self._file.write(text)
         # 事故でプログラムが強制終了しても途中までのデータを残すために毎回ファイルに書き込む
         self._file.flush()

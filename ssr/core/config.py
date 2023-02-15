@@ -48,17 +48,24 @@ class Config(t.NamedTuple):
         with path.open("rb") as f:
             config = tomllib.load(f)
 
+        root = path.parent
+
         if not "DATADIR" in config:
             raise ConfigError("DATADIRは必須です")
         datadir = Path(config["DATADIR"])
+        if not datadir.is_absolute():
+            datadir = (root / datadir).resolve()
 
         if not "TMPDIR" in config:
             raise ConfigError("TEMPDIRは必須です")
         tmpdir = Path(config["TMPDIR"])
-
+        if not tmpdir.is_absolute():
+            tmpdir = (root / tmpdir).resolve()
         if not "MACROPATH" in config:
             raise ConfigError("MACRODIRは必須です")
         macropath = Path(config["MACROPATH"])
+        if not macropath.is_absolute():
+            macropath = (root / macropath).resolve()
 
         macro = config["MACRO"] if "MACRO" in config else {}
 
